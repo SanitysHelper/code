@@ -1,0 +1,142 @@
+--pos 1 left corn 643, 46, -320
+--pos 2 left far corn 644, 46, 392
+--pos 3 far right corn -96, 46, 388
+--pos 4 right corn -93, 46, -336
+speed = 0.75
+rebirthgoal = 200
+teleporting = true
+chance = 4
+_G.pause = false
+_G.active = not _G.active
+grabgems = true
+if _G.active == true then
+function getplayer()
+	return game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+end
+speed = 1/speed
+sellthing = nil
+for i,v in pairs(game.Workspace:GetDescendants()) do
+if v.ClassName:lower():match("touch") and v.Parent.Name == "Sell" then
+sellthing = v:FindFirstAncestorWhichIsA("Part")
+print("Found sell")
+end
+end
+repeat wait() until game:IsLoaded()
+function notify(text)
+game.StarterGui:SetCore("SendNotification", {
+Title = "Notification"; -- the title (ofc)
+Text = text; -- what the text says (ofc)
+Icon = "rbxassetid://4946089592"; -- the image if u want. 
+Duration = 5;
+})
+end
+local vu = game:GetService("VirtualUser")
+game:GetService("Players").LocalPlayer.Idled:connect(function()
+   vu:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+   wait()
+   vu:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+end)
+notify("Anti AFK Loaded")
+function buy(tool)
+local args = {
+    [1] = tool,
+    [2] = 1
+}
+game:GetService("ReplicatedStorage"):WaitForChild("RemoteFunctions"):WaitForChild("Purchase"):InvokeServer(unpack(args))
+end
+function sell()
+spawn(function()
+if sellthing then
+firetouchinterest(sellthing,game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart"),1)
+wait()
+firetouchinterest(sellthing,game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart"),0)
+end
+game.Players.LocalPlayer.leaderstats.Gold.Changed:Wait()
+local gold = game.Players.LocalPlayer.leaderstats.Gold.Value
+if gold >= 121300000 then
+buy("Spirit")
+elseif gold >= 243200000 then
+buy("Adamantite")
+elseif gold >= 28700000 then
+buy("Emerald")
+elseif gold >= 263000 then
+buy("Iron")
+end
+rebirth()
+end)
+end
+function rebirth()
+game:GetService("ReplicatedStorage"):WaitForChild("RemoteFunctions"):WaitForChild("Rebirth"):InvokeServer()
+if game.Players.LocalPlayer.leaderstats.Rebirths.Value >= rebirthgoal then
+local args = {
+    [1] = true
+}
+
+game:GetService("ReplicatedStorage"):WaitForChild("RemoteFunctions"):WaitForChild("Rebirth"):InvokeServer(unpack(args))
+end
+
+end
+
+round = 0
+local TweenService = game:GetService("TweenService")
+
+
+
+position = {
+[1] = CFrame.new(-88, 46, -334);
+[2] = CFrame.new(-87, 46, 379);
+[3] = CFrame.new(633, 46, 377);
+[4] = CFrame.new(629, 46, -337);
+}
+while wait(speed) and _G.active == true do
+if _G.pause == true then
+repeat wait() until _G.pause == false
+end
+	local part = getplayer()
+local Position = part.CFrame
+
+	if round <= #position-1 then
+	    round = round+1
+	else
+	    round = 1
+	end
+	local info = TweenInfo.new(
+	speed, -- Time animating
+	Enum.EasingStyle.Linear, -- EasingStyle
+	Enum.EasingDirection.Out, -- EasingDirection
+	0, -- Repitions
+	false, -- Reverse post tween?
+	0 -- Delay time
+)
+
+local goal = {
+
+    -- HERE
+	CFrame = position[round] -- adds minus 10 Y to the old position
+	
+}
+local tweening = TweenService:Create(part, info, goal)
+if round == 4 and grabgems == true and math.random(1,chance) == 1 and teleporting == true then
+notify("Gathering Gems")
+for i,v in pairs(game.Workspace:GetChildren()) do
+	if v.Name:match("Rainbow") and v:FindFirstChild("Wheat") then
+	sell()
+	repeat pcall(function() game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.Wheat.CFrame end) wait() until not v:FindFirstChild("Wheat") or v.Parent ~= game.Workspace or _G.active == false
+	elseif v.Name:match("Crystal") then
+	sell()
+	repeat pcall(function() game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.CFrame end) wait() until v.Parent ~= game.Workspace or _G.active == false
+	elseif v.Name:match("Gold") and v:FindFirstChild("Wheat") then
+	sell()
+	repeat pcall(function() game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.Wheat.CFrame end) wait() until not v:FindFirstChild("Wheat") or v.Parent ~= game.Workspace or _G.active == false
+	end
+end
+end
+if teleporting == true then
+tweening:play()
+else
+tweening:Destroy()
+end
+sell()
+
+end
+end	 
